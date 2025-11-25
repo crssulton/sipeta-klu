@@ -1,0 +1,12 @@
+export { default as SearchIcon } from './search-icon';
+export { default as LocationIcon } from './location-icon';
+export { default as DocumentIcon } from './document-icon';
+export { default as BookIcon } from './book-icon';
+export { default as CalculatorIcon } from './calculator-icon';
+export { default as PencilIcon } from './pencil-icon';
+export { default as ChartIcon } from './chart-icon';
+export { default as GlobeIcon } from './globe-icon';
+export { default as MenuIcon } from './menu-icon';
+export { default as CloseIcon } from './close-icon';
+export { default as HomeIcon } from './home-icon';
+export { default as DashboardIcon } from './dashboard-icon';

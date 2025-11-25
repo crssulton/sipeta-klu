@@ -1,0 +1,93 @@
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from 'react';
+import { MapContainer, Marker, Polygon, Popup, TileLayer } from 'react-leaflet';
+import { coordsToLeaflet, coordToLeaflet } from '@/lib/map-utils';
+
+// Fix default marker icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+        'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+});
+
+interface MapModalProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    coordinates: [number, number][];
+    center: [number, number];
+    title?: string;
+}
+
+export function MapModal({
+    open,
+    onOpenChange,
+    coordinates,
+    center,
+    title = 'Land Map',
+}: MapModalProps) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    if (!isMounted) return null;
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="h-[80vh] min-h-[80vh] w-[80vw] min-w-[80vw]">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>
+                        View land boundaries on the map
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="h-[calc(80vh-120px)] w-full overflow-hidden rounded-lg">
+                    <MapContainer
+                        center={coordToLeaflet(center)}
+                        zoom={16}
+                        scrollWheelZoom={true}
+                        style={{ height: '100%', width: '100%' }}
+                    >
+                        <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        {coordinates && coordinates.length > 0 && (
+                            <Polygon
+                                positions={coordsToLeaflet(coordinates)}
+                                pathOptions={{
+                                    color: 'blue',
+                                    fillColor: 'lightblue',
+                                    fillOpacity: 0.5,
+                                }}
+                            />
+                        )}
+                        <Marker position={coordToLeaflet(center)}>
+                            <Popup>
+                                <a
+                                    href={`https://www.google.com/maps?q=${center[1]},${center[0]}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-cyan-600 underline"
+                                >
+                                    Lihat di Google Maps
+                                </a>
+                            </Popup>
+                        </Marker>
+                    </MapContainer>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
