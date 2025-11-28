@@ -2,8 +2,10 @@ import { Card } from '@/components/ui/card';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
-import { MapContainer, Marker, Polygon, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Polygon, Popup, TileLayer, LayersControl } from 'react-leaflet';
 import { coordsToLeaflet, coordToLeaflet } from '@/lib/map-utils';
+
+const { BaseLayer } = LayersControl;
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -47,10 +49,22 @@ export function LandMapPreview({
                     style={{ height: '100%', width: '100%' }}
                     scrollWheelZoom={true}
                 >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
+                    <LayersControl position="bottomleft">
+                        <BaseLayer name="Standar">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                maxZoom={19}
+                            />
+                        </BaseLayer>
+                        <BaseLayer checked name="Satelit">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                                maxZoom={22}
+                            />
+                        </BaseLayer>
+                    </LayersControl>
                     <Polygon
                         positions={coordsToLeaflet(coordinates)}
                         pathOptions={{

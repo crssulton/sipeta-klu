@@ -27,6 +27,10 @@ export default function CustomFieldEdit() {
     const [options, setOptions] = useState<string[]>(
         field.field_options || [''],
     );
+    const [isRequired, setIsRequired] = useState(field.is_required);
+    const [isVisibleInList, setIsVisibleInList] = useState(field.is_visible_in_list);
+    const [isVisibleInDetail, setIsVisibleInDetail] = useState(field.is_visible_in_detail);
+    const [isActive, setIsActive] = useState(field.is_active);
 
     const handleAddOption = () => {
         setOptions([...options, '']);
@@ -228,10 +232,10 @@ export default function CustomFieldEdit() {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="is_required"
-                                        name="is_required"
-                                        value="1"
-                                        defaultChecked={field.is_required}
+                                        checked={isRequired}
+                                        onCheckedChange={(checked) => setIsRequired(checked === true)}
                                     />
+                                    <input type="hidden" name="is_required" value={isRequired ? '1' : '0'} />
                                     <Label htmlFor="is_required">
                                         Field wajib diisi (Required)
                                     </Label>
@@ -240,12 +244,10 @@ export default function CustomFieldEdit() {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="is_visible_in_list"
-                                        name="is_visible_in_list"
-                                        value="1"
-                                        defaultChecked={
-                                            field.is_visible_in_list
-                                        }
+                                        checked={isVisibleInList}
+                                        onCheckedChange={(checked) => setIsVisibleInList(checked === true)}
                                     />
+                                    <input type="hidden" name="is_visible_in_list" value={isVisibleInList ? '1' : '0'} />
                                     <Label htmlFor="is_visible_in_list">
                                         Tampilkan di tabel list tanah
                                     </Label>
@@ -254,12 +256,10 @@ export default function CustomFieldEdit() {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="is_visible_in_detail"
-                                        name="is_visible_in_detail"
-                                        value="1"
-                                        defaultChecked={
-                                            field.is_visible_in_detail
-                                        }
+                                        checked={isVisibleInDetail}
+                                        onCheckedChange={(checked) => setIsVisibleInDetail(checked === true)}
                                     />
+                                    <input type="hidden" name="is_visible_in_detail" value={isVisibleInDetail ? '1' : '0'} />
                                     <Label htmlFor="is_visible_in_detail">
                                         Tampilkan di detail tanah
                                     </Label>
@@ -268,10 +268,10 @@ export default function CustomFieldEdit() {
                                 <div className="flex items-center space-x-2">
                                     <Checkbox
                                         id="is_active"
-                                        name="is_active"
-                                        value="1"
-                                        defaultChecked={field.is_active}
+                                        checked={isActive}
+                                        onCheckedChange={(checked) => setIsActive(checked === true)}
                                     />
+                                    <input type="hidden" name="is_active" value={isActive ? '1' : '0'} />
                                     <Label htmlFor="is_active">
                                         Field aktif dan dapat digunakan
                                     </Label>

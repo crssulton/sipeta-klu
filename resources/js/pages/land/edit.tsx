@@ -164,6 +164,11 @@ export default function LandEdit() {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="nib">NIB</Label>
+                                        <Input
+                                            id="nib"
+                                            name="nib"
+                                            defaultValue={land.nib ?? ''}
+                                        />
                                         <InputError message={errors.nib} />
                                     </div>
 

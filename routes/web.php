@@ -24,55 +24,6 @@ Route::get('/main-menu', function () {
 })->name('main-menu');
 
 
-Route::get('/pencarian-bidang-tanah', function () {
-    $nomorSertifikat = request('nomor_sertifikat');
-    $namaPemilik = request('nama_pemilik');
-    $lokasi = request('lokasi');
-    
-    // Ambil semua lands dengan coordinates yang valid
-    $lands = Land::with('certificates')
-        ->whereNotNull('coordinates')
-        ->whereNotNull('coordinate')
-        ->get()
-        ->map(function ($land) {
-            // Force reload additional_data to ensure it's included
-            $additionalData = $land->additional_data;
-            
-            $mapped = [
-                'id' => $land->id,
-                'nomor_hak' => $land->nomor_hak,
-                'pemilik_pe' => $land->pemilik_pe,
-                'pemilik_ak' => $land->pemilik_ak,
-                'kelurahan' => $land->kelurahan,
-                'kecamatan' => $land->kecamatan,
-                'luas' => $land->luas,
-                'tipe_hak' => $land->tipe_hak,
-                'coordinates' => is_string($land->coordinates) ? json_decode($land->coordinates) : $land->coordinates,
-                'coordinate' => is_string($land->coordinate) ? json_decode($land->coordinate) : $land->coordinate,
-                'certificates' => $land->certificates,
-                'additional_data' => $additionalData,
-            ];
-            
-            return $mapped;
-        });
-    
-    // Get custom fields visible in detail
-    $customFields = \App\Models\CustomFieldDefinition::active()
-        ->visibleInDetail()
-        ->ordered()
-        ->get();
-    
-    return Inertia::render('pencarian-bidang-tanah', [
-        'lands' => $lands,
-        'customFields' => $customFields,
-        'filters' => [
-            'nomor_sertifikat' => $nomorSertifikat,
-            'nama_pemilik' => $namaPemilik,
-            'lokasi' => $lokasi,
-        ],
-    ]);
-})->name('pencarian.bidang-tanah');
-
 Route::get('/pencarian-batas-administrasi', function () {
     return Inertia::render('pencarian-batas-administrasi');
 })->name('pencarian.batas-administrasi');
@@ -99,6 +50,56 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'totalAdmins' => $totalAdmins,
         ]);
     })->name('dashboard');
+
+    // Pencarian Bidang Tanah - Requires authentication
+    Route::get('/pencarian-bidang-tanah', function () {
+        $nomorSertifikat = request('nomor_sertifikat');
+        $namaPemilik = request('nama_pemilik');
+        $lokasi = request('lokasi');
+        
+        // Ambil semua lands dengan coordinates yang valid
+        $lands = Land::with('certificates')
+            ->whereNotNull('coordinates')
+            ->whereNotNull('coordinate')
+            ->get()
+            ->map(function ($land) {
+                // Force reload additional_data to ensure it's included
+                $additionalData = $land->additional_data;
+                
+                $mapped = [
+                    'id' => $land->id,
+                    'nomor_hak' => $land->nomor_hak,
+                    'pemilik_pe' => $land->pemilik_pe,
+                    'pemilik_ak' => $land->pemilik_ak,
+                    'kelurahan' => $land->kelurahan,
+                    'kecamatan' => $land->kecamatan,
+                    'luas' => $land->luas,
+                    'tipe_hak' => $land->tipe_hak,
+                    'coordinates' => is_string($land->coordinates) ? json_decode($land->coordinates) : $land->coordinates,
+                    'coordinate' => is_string($land->coordinate) ? json_decode($land->coordinate) : $land->coordinate,
+                    'certificates' => $land->certificates,
+                    'additional_data' => $additionalData,
+                ];
+                
+                return $mapped;
+            });
+        
+        // Get custom fields visible in detail
+        $customFields = \App\Models\CustomFieldDefinition::active()
+            ->visibleInDetail()
+            ->ordered()
+            ->get();
+        
+        return Inertia::render('pencarian-bidang-tanah', [
+            'lands' => $lands,
+            'customFields' => $customFields,
+            'filters' => [
+                'nomor_sertifikat' => $nomorSertifikat,
+                'nama_pemilik' => $namaPemilik,
+                'lokasi' => $lokasi,
+            ],
+        ]);
+    })->name('pencarian.bidang-tanah');
 
     // Admin Management - Super Admin Only
     Route::middleware(['super_admin'])->group(function () {

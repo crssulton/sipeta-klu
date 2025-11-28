@@ -19,8 +19,11 @@ import {
     Polygon,
     Popup,
     TileLayer,
+    LayersControl,
     useMapEvents,
 } from 'react-leaflet';
+
+const { BaseLayer } = LayersControl;
 import { parseCoordinates, coordsToLeaflet, coordToLeaflet } from '@/lib/map-utils';
 
 // Fix default marker icon
@@ -194,7 +197,7 @@ export default function PencarianBidangTanah() {
     return (
         <div className="relative h-screen w-full overflow-hidden">
             {/* Header - Fixed at top */}
-            <div className="pointer-events-auto absolute top-0 left-0 right-0 z-20 bg-cyan-500 shadow-md">
+            <div className="pointer-events-auto absolute top-0 left-0 right-0 z-20 bg-cyan-500/60 shadow-md">
                 <div className="container mx-auto">
                     <SiteHeader />
                 </div>
@@ -216,11 +219,25 @@ export default function PencarianBidangTanah() {
                     }}
                     ref={mapRef}
                 >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        maxZoom={19}
-                    />
+                    <LayersControl position="bottomleft">
+                        {/* OpenStreetMap */}
+                        <BaseLayer checked name="Standar">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                maxZoom={19}
+                            />
+                        </BaseLayer>
+                        
+                        {/* Google Hybrid (Satellite + Labels) */}
+                        <BaseLayer name="Satelit">
+                            <TileLayer
+                                attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                                maxZoom={22}
+                            />
+                        </BaseLayer>
+                    </LayersControl>
                     
                     {/* Map click handler to deselect */}
                     <MapClickHandler />
@@ -361,7 +378,7 @@ export default function PencarianBidangTanah() {
                                     </div>
 
                                     {/* Nama Pemilik */}
-                                    <div>
+                                    {/* <div>
                                         <label className="mb-1.5 block text-sm font-medium text-gray-700">
                                             Nama Pemilik
                                         </label>
@@ -379,7 +396,7 @@ export default function PencarianBidangTanah() {
                                             />
                                             <SearchIcon className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                         </div>
-                                    </div>
+                                    </div> */}
 
                                     {/* Lokasi */}
                                     <div>
@@ -476,10 +493,18 @@ export default function PencarianBidangTanah() {
                                             {selectedLand.kecamatan || '-'}
                                         </p>
                                     </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-500">
+                                            Penggunaan
+                                        </p>
+                                        <p className="text-base text-gray-900">
+                                            {selectedLand.penggunaan || '-'}
+                                        </p>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm font-medium text-gray-500">
-                                                Luas
+                                                Luas (m²)
                                             </p>
                                             <p className="text-base text-gray-900">
                                                 {selectedLand.luas || '-'}

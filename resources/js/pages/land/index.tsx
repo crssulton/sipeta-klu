@@ -273,6 +273,9 @@ export default function LandIndex() {
                                 <TableHead className="border-x">
                                     Luas (m²)
                                 </TableHead>
+                                <TableHead className="border-x">
+                                    Penggunaan
+                                </TableHead>
                                 {customFields.map((field) => (
                                     <TableHead key={field.id} className="border-x">
                                         {field.field_label}
@@ -317,6 +320,9 @@ export default function LandIndex() {
                                         </TableCell>
                                         <TableCell className="border-x">
                                             {land.luas}
+                                        </TableCell>
+                                        <TableCell className="border-x">
+                                            {land.penggunaan}
                                         </TableCell>
                                         {customFields.map((field) => (
                                             <TableCell key={field.id} className="border-x">

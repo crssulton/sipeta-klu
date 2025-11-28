@@ -8,8 +8,10 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useEffect, useState } from 'react';
-import { MapContainer, Marker, Polygon, Popup, TileLayer } from 'react-leaflet';
+import { MapContainer, Marker, Polygon, Popup, TileLayer, LayersControl } from 'react-leaflet';
 import { coordsToLeaflet, coordToLeaflet } from '@/lib/map-utils';
+
+const { BaseLayer } = LayersControl;
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -45,24 +47,36 @@ export function MapModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="h-[80vh] min-h-[80vh] w-[80vw] min-w-[80vw]">
+            <DialogContent className="h-[90vh] min-h-[90vh] w-[90vw] min-w-[90vw]">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>
                         View land boundaries on the map
                     </DialogDescription>
                 </DialogHeader>
-                <div className="h-[calc(80vh-120px)] w-full overflow-hidden rounded-lg">
+                <div className="h-[calc(90vh-120px)] w-full overflow-hidden rounded-lg">
                     <MapContainer
                         center={coordToLeaflet(center)}
                         zoom={16}
                         scrollWheelZoom={true}
                         style={{ height: '100%', width: '100%' }}
                     >
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        />
+                        <LayersControl position="bottomleft">
+                            <BaseLayer name="Standar">
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    maxZoom={19}
+                                />
+                            </BaseLayer>
+                            <BaseLayer checked name="Satelit">
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                    url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                                    maxZoom={22}
+                                />
+                            </BaseLayer>
+                        </LayersControl>
                         {coordinates && coordinates.length > 0 && (
                             <Polygon
                                 positions={coordsToLeaflet(coordinates)}

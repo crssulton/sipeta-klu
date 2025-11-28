@@ -12,7 +12,7 @@ import {
 import { dashboard } from '@/routes';
 import { type NavItem, SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
-import { FileText, LayoutGrid, MapPin, Shield } from 'lucide-react';
+import { FileText, LayoutGrid, MapPin, Shield, MapIcon } from 'lucide-react';
 import { useMemo } from 'react';
 import AppLogo from './app-logo';
 
@@ -49,6 +49,11 @@ export function AppSidebar() {
                 title: 'Manajemen Sertifikat',
                 href: '/certificate',
                 icon: FileText,
+            },
+            {
+                title: 'Pencarian Bidang Tanah',
+                href: '/pencarian-bidang-tanah',
+                icon: MapIcon,
             },
         );
 

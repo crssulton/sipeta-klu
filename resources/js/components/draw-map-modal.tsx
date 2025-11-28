@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, FeatureGroup, Polygon } from 'react-leaflet';
+import { MapContainer, TileLayer, FeatureGroup, Polygon, LayersControl } from 'react-leaflet';
 import { EditControl } from 'react-leaflet-draw';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
+
+const { BaseLayer } = LayersControl;
 import {
     Dialog,
     DialogContent,
@@ -144,7 +146,7 @@ export function DrawMapModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-5xl">
+            <DialogContent className="max-w-[90vw] max-h-[80vh] min-w-[90vw] h-[90vh] flex flex-col">
                 <DialogHeader>
                     <DialogTitle>Gambar Area Tanah</DialogTitle>
                     <DialogDescription>
@@ -170,20 +172,30 @@ export function DrawMapModal({
                     </Button>
                 </form>
 
-                <div className="h-[600px] w-full rounded-lg overflow-hidden">
+                <div className="flex-1 w-full rounded-lg overflow-hidden">
                     <MapContainer
                         center={coordToLeaflet(initialCenter)}
                         zoom={16}
-                        maxZoom={19}
                         scrollWheelZoom={true}
                         style={{ height: '100%', width: '100%' }}
                         ref={mapRef}
                     >
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            maxZoom={19}
-                        />
+                        <LayersControl position="bottomleft">
+                            <BaseLayer name="Standar">
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                    maxZoom={19}
+                                />
+                            </BaseLayer>
+                            <BaseLayer checked name="Satelit">
+                                <TileLayer
+                                    attribution='&copy; <a href="https://www.google.com/maps">Google</a>'
+                                    url="http://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}"
+                                    maxZoom={22}
+                                />
+                            </BaseLayer>
+                        </LayersControl>
                         <FeatureGroup>
                             <EditControl
                                 position="topright"
