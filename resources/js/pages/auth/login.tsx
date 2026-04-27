@@ -15,12 +15,14 @@ interface LoginProps {
     status?: string;
     canResetPassword: boolean;
     canRegister: boolean;
+    redirectTo?: string;
 }
 
 export default function Login({
     status,
     canResetPassword,
     canRegister,
+    redirectTo,
 }: LoginProps) {
     return (
         <AuthLayout
@@ -42,6 +44,8 @@ export default function Login({
             >
                 {({ processing, errors }) => (
                     <>
+                        <input type="hidden" name="redirect_to" value={redirectTo ?? ''} />
+
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>

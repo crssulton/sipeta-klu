@@ -13,6 +13,7 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\LoginResponse;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
 
@@ -23,6 +24,26 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Custom login response to support safe redirect back to previous page.
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse {
+                public function toResponse($request)
+                {
+                    $redirectTo = $request->string('redirect_to')->toString();
+
+                    if (
+                        $redirectTo !== '' &&
+                        str_starts_with($redirectTo, '/') &&
+                        !str_starts_with($redirectTo, '//')
+                    ) {
+                        return redirect()->to($redirectTo);
+                    }
+
+                    return redirect()->intended(config('fortify.home'));
+                }
+            };
+        });
+
         // Custom register response to prevent auto-login
         $this->app->singleton(RegisterResponse::class, function () {
             return new class implements RegisterResponse {
@@ -68,6 +89,7 @@ class FortifyServiceProvider extends ServiceProvider
             'canResetPassword' => Features::enabled(Features::resetPasswords()),
             'canRegister' => Features::enabled(Features::registration()),
             'status' => $request->session()->get('status'),
+            'redirectTo' => $request->query('redirect_to', ''),
         ]));
 
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [

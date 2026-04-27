@@ -9,7 +9,9 @@ import { DrawMapModal } from '@/components/draw-map-modal';
 import { DynamicField } from '@/components/dynamic-field';
 import { CustomFieldDefinition } from '@/types';
 import { Map } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+type Position = 'kiri' | 'kanan' | 'atas' | 'bawah';
 
 interface Props {
     customFields: CustomFieldDefinition[];
@@ -18,6 +20,10 @@ interface Props {
 
 export default function LandCreate() {
     const { customFields } = usePage<Props>().props;
+    const [selectedImagePreviews, setSelectedImagePreviews] = useState<
+        Partial<Record<Position, string>>
+    >({});
+    const previewRef = useRef<Partial<Record<Position, string>>>({});
     const [drawMapOpen, setDrawMapOpen] = useState(false);
     const [coordinatesValue, setCoordinatesValue] = useState('');
     const [coordinateValue, setCoordinateValue] = useState('');
@@ -59,6 +65,36 @@ export default function LandCreate() {
         setCoordinateValue(JSON.stringify(center));
     };
 
+    const handleImagePreview = (position: Position, file?: File | null) => {
+        setSelectedImagePreviews((prev) => {
+            if (prev[position]) {
+                URL.revokeObjectURL(prev[position]);
+            }
+
+            if (!file) {
+                const { [position]: _removed, ...rest } = prev;
+                return rest;
+            }
+
+            return {
+                ...prev,
+                [position]: URL.createObjectURL(file),
+            };
+        });
+    };
+
+    useEffect(() => {
+        previewRef.current = selectedImagePreviews;
+    }, [selectedImagePreviews]);
+
+    useEffect(() => {
+        return () => {
+            Object.values(previewRef.current).forEach((url) => {
+                if (url) URL.revokeObjectURL(url);
+            });
+        };
+    }, []);
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -76,7 +112,7 @@ export default function LandCreate() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-6">
-                    <Form action="/land" method="post">
+                    <Form action="/land" method="post" encType="multipart/form-data">
                         {({ processing, errors }) => (
                             <div className="space-y-6">
                                 <div className="grid gap-4 md:grid-cols-2">
@@ -242,6 +278,120 @@ export default function LandCreate() {
                                         Format: [longitude, latitude]
                                     </p>
                                     <InputError message={errors.coordinate} />
+                                </div>
+
+                                <div className="space-y-4 border-t pt-6">
+                                    <h3 className="text-lg font-semibold">
+                                        Foto Posisi Lahan
+                                    </h3>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_kiri">
+                                                Foto Posisi Kiri
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_kiri"
+                                                name="foto_posisi_kiri"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'kiri',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {selectedImagePreviews.kiri && (
+                                                <img
+                                                    src={selectedImagePreviews.kiri}
+                                                    alt="Preview foto posisi kiri"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_kiri} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_kanan">
+                                                Foto Posisi Kanan
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_kanan"
+                                                name="foto_posisi_kanan"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'kanan',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {selectedImagePreviews.kanan && (
+                                                <img
+                                                    src={selectedImagePreviews.kanan}
+                                                    alt="Preview foto posisi kanan"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_kanan} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_atas">
+                                                Foto Posisi Atas
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_atas"
+                                                name="foto_posisi_atas"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'atas',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {selectedImagePreviews.atas && (
+                                                <img
+                                                    src={selectedImagePreviews.atas}
+                                                    alt="Preview foto posisi atas"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_atas} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_bawah">
+                                                Foto Posisi Bawah
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_bawah"
+                                                name="foto_posisi_bawah"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'bawah',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {selectedImagePreviews.bawah && (
+                                                <img
+                                                    src={selectedImagePreviews.bawah}
+                                                    alt="Preview foto posisi bawah"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_bawah} />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Format yang didukung: JPG, PNG, WEBP. Maksimal 5MB per file.
+                                    </p>
                                 </div>
 
                                 {/* Dynamic Custom Fields */}

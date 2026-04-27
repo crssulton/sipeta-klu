@@ -26,6 +26,10 @@ class Land extends Model
         'coordinates',
         'coordinate',
         'additional_data',
+        'foto_posisi_kiri',
+        'foto_posisi_kanan',
+        'foto_posisi_atas',
+        'foto_posisi_bawah',
     ];
 
     protected function casts(): array

@@ -67,6 +67,10 @@ export interface Land {
     coordinates?: string | [number, number][] | null;
     coordinate?: string | [number, number] | null;
     additional_data?: Record<string, unknown> | null;
+    foto_posisi_kiri?: string | null;
+    foto_posisi_kanan?: string | null;
+    foto_posisi_atas?: string | null;
+    foto_posisi_bawah?: string | null;
     certificates?: Certificate[];
     created_at?: string;
     updated_at?: string;

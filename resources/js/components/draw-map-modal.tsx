@@ -33,8 +33,8 @@ interface DrawMapModalProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     onSave: (coordinates: [number, number][], center: [number, number]) => void;
-    initialCoordinates?: [number, number][];
-    initialCenter?: [number, number];
+    initialCoordinates?: [number, number][] | null;
+    initialCenter?: [number, number] | null;
 }
 
 export function DrawMapModal({
@@ -57,8 +57,10 @@ export function DrawMapModal({
 
     // Update drawnCoordinates when initialCoordinates changes
     useEffect(() => {
-        if (initialCoordinates) {
+        if (initialCoordinates && initialCoordinates.length > 0) {
             setDrawnCoordinates(initialCoordinates);
+        } else if (open) {
+            setDrawnCoordinates([]);
         }
     }, [initialCoordinates]);
 
@@ -144,6 +146,11 @@ export function DrawMapModal({
 
     if (!isMounted) return null;
 
+    const safeInitialCenter =
+        initialCenter && Array.isArray(initialCenter) && initialCenter.length === 2
+            ? initialCenter
+            : [116.235059064008, -8.27174304218052] as [number, number];
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-[90vw] max-h-[80vh] min-w-[90vw] h-[90vh] flex flex-col">
@@ -174,7 +181,7 @@ export function DrawMapModal({
 
                 <div className="flex-1 w-full rounded-lg overflow-hidden">
                     <MapContainer
-                        center={coordToLeaflet(initialCenter)}
+                        center={coordToLeaflet(safeInitialCenter)}
                         zoom={16}
                         scrollWheelZoom={true}
                         style={{ height: '100%', width: '100%' }}

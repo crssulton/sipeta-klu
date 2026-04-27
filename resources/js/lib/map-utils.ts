@@ -10,7 +10,7 @@ proj4.defs('EPSG:32750', '+proj=utm +zone=50 +south +datum=WGS84 +units=m +no_de
  * - Northing: 9000000-9100000
  */
 export const isUTMCoordinate = (coord: [number, number]): boolean => {
-    return coord[0] > 1000 && coord[1] > 1000000;
+    return Array.isArray(coord) && coord.length === 2 && coord[0] > 1000 && coord[1] > 1000000;
 };
 
 /**
@@ -44,6 +44,8 @@ export const parseCoordinates = (
     if (!coordString) return [];
     
     if (typeof coordString !== 'string') {
+        if (!Array.isArray(coordString) || coordString.length === 0) return [];
+
         // Convert UTM coordinates if needed
         if (Array.isArray(coordString[0])) {
             // Array of coordinates (polygon)
@@ -56,14 +58,18 @@ export const parseCoordinates = (
     
     try {
         const parsed = JSON.parse(coordString);
+        if (!parsed) return [];
+
         // Convert UTM coordinates if needed
-        if (Array.isArray(parsed[0])) {
+        if (Array.isArray(parsed) && parsed.length > 0 && Array.isArray(parsed[0])) {
             // Array of coordinates (polygon)
             return parsed.map((coord: [number, number]) => convertUTMtoWGS84(coord));
-        } else {
+        } else if (Array.isArray(parsed) && parsed.length === 2) {
             // Single coordinate (point)
-            return convertUTMtoWGS84(parsed);
+            return convertUTMtoWGS84(parsed as [number, number]);
         }
+
+        return [];
     } catch {
         return [];
     }
@@ -89,6 +95,10 @@ export const coordsToLeaflet = (coords: [number, number][]): [number, number][] 
  * @returns [lat, lng] for Leaflet
  */
 export const coordToLeaflet = (coord: [number, number]): [number, number] => {
+    if (!Array.isArray(coord) || coord.length !== 2) {
+        return [0, 0];
+    }
+
     const [lng, lat] = convertUTMtoWGS84(coord);
     return [lat, lng];
 };

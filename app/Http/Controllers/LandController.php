@@ -5,11 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\CustomFieldDefinition;
 use App\Models\Land;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class LandController extends Controller
 {
+    private const POSITION_IMAGE_FIELDS = [
+        'foto_posisi_kiri',
+        'foto_posisi_kanan',
+        'foto_posisi_atas',
+        'foto_posisi_bawah',
+    ];
+
+    private const POSITION_FIELD_MAP = [
+        'kiri' => 'foto_posisi_kiri',
+        'kanan' => 'foto_posisi_kanan',
+        'atas' => 'foto_posisi_atas',
+        'bawah' => 'foto_posisi_bawah',
+    ];
+
     public function index(Request $request): Response
     {
         $query = Land::with('certificates');
@@ -110,6 +126,10 @@ class LandController extends Controller
             'coordinates.*' => 'array|size:2',
             'coordinate' => 'nullable|array|size:2',
             'additional_data' => 'nullable|array',
+            'foto_posisi_kiri' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_kanan' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_atas' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_bawah' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
 
         // Add dynamic validation rules for custom fields
@@ -135,6 +155,7 @@ class LandController extends Controller
         }
 
         $validated = $request->validate($rules);
+        $validated = $this->storePositionImages($request, $validated);
 
         Land::create($validated);
 
@@ -194,6 +215,10 @@ class LandController extends Controller
             'coordinates.*' => 'array|size:2',
             'coordinate' => 'nullable|array|size:2',
             'additional_data' => 'nullable|array',
+            'foto_posisi_kiri' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_kanan' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_atas' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_posisi_bawah' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
 
         // Add dynamic validation rules for custom fields
@@ -219,6 +244,7 @@ class LandController extends Controller
         }
 
         $validated = $request->validate($rules);
+        $validated = $this->storePositionImages($request, $validated, $land);
 
         $land->update($validated);
 
@@ -236,8 +262,49 @@ class LandController extends Controller
 
     public function destroy(Land $land)
     {
+        foreach (self::POSITION_IMAGE_FIELDS as $field) {
+            if ($land->{$field}) {
+                Storage::disk('local')->delete($land->{$field});
+            }
+        }
+
         $land->delete();
 
         return redirect()->route('land.index')->with('success', 'Land data deleted successfully.');
+    }
+
+    public function positionImage(Land $land, string $position): BinaryFileResponse
+    {
+        $field = self::POSITION_FIELD_MAP[$position] ?? null;
+
+        if (!$field || !$land->{$field}) {
+            abort(404);
+        }
+
+        $path = $land->{$field};
+
+        if (!Storage::disk('local')->exists($path)) {
+            abort(404);
+        }
+
+        return response()->file(Storage::disk('local')->path($path));
+    }
+
+    private function storePositionImages(Request $request, array $validated, ?Land $land = null): array
+    {
+        foreach (self::POSITION_IMAGE_FIELDS as $field) {
+            if (!$request->hasFile($field)) {
+                unset($validated[$field]);
+                continue;
+            }
+
+            if ($land && $land->{$field}) {
+                Storage::disk('local')->delete($land->{$field});
+            }
+
+            $validated[$field] = $request->file($field)->store('land-positions', 'local');
+        }
+
+        return $validated;
     }
 }

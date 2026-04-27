@@ -9,7 +9,9 @@ import { CustomFieldDefinition, Land } from '@/types';
 import { DrawMapModal } from '@/components/draw-map-modal';
 import { DynamicField } from '@/components/dynamic-field';
 import { Map } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+
+type Position = 'kiri' | 'kanan' | 'atas' | 'bawah';
 
 interface Props {
     land: Land;
@@ -20,6 +22,12 @@ interface Props {
 
 export default function LandEdit() {
     const { land, customFields, returnFilters } = usePage<Props>().props;
+    const getPositionImageUrl = (position: 'kiri' | 'kanan' | 'atas' | 'bawah') =>
+        `/land/${land.id}/position-images/${position}`;
+    const [selectedImagePreviews, setSelectedImagePreviews] = useState<
+        Partial<Record<Position, string>>
+    >({});
+    const previewRef = useRef<Partial<Record<Position, string>>>({});
     const [drawMapOpen, setDrawMapOpen] = useState(false);
     const [coordinatesValue, setCoordinatesValue] = useState(
         JSON.stringify(land.coordinates),
@@ -65,6 +73,36 @@ export default function LandEdit() {
         setCoordinateValue(JSON.stringify(center));
     };
 
+    const handleImagePreview = (position: Position, file?: File | null) => {
+        setSelectedImagePreviews((prev) => {
+            if (prev[position]) {
+                URL.revokeObjectURL(prev[position]);
+            }
+
+            if (!file) {
+                const { [position]: _removed, ...rest } = prev;
+                return rest;
+            }
+
+            return {
+                ...prev,
+                [position]: URL.createObjectURL(file),
+            };
+        });
+    };
+
+    useEffect(() => {
+        previewRef.current = selectedImagePreviews;
+    }, [selectedImagePreviews]);
+
+    useEffect(() => {
+        return () => {
+            Object.values(previewRef.current).forEach((url) => {
+                if (url) URL.revokeObjectURL(url);
+            });
+        };
+    }, []);
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -82,9 +120,15 @@ export default function LandEdit() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-6">
-                    <Form action={`/land/${land.id}`} method="put">
+                    <Form
+                        action={`/land/${land.id}`}
+                        method="post"
+                        encType="multipart/form-data"
+                    >
                         {({ processing, errors }) => (
                             <div className="space-y-6">
+                                <input type="hidden" name="_method" value="PUT" />
+
                                 {/* Hidden inputs to preserve filter params for redirect */}
                                 {returnFilters && Object.entries(returnFilters).map(([key, value]) => 
                                     value ? <input key={key} type="hidden" name={`return_filter_${key}`} value={value} /> : null
@@ -285,6 +329,136 @@ export default function LandEdit() {
                                         Format: [longitude, latitude]
                                     </p>
                                     <InputError message={errors.coordinate} />
+                                </div>
+
+                                <div className="space-y-4 border-t pt-6">
+                                    <h3 className="text-lg font-semibold">
+                                        Foto Posisi Lahan
+                                    </h3>
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_kiri">
+                                                Foto Posisi Kiri
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_kiri"
+                                                name="foto_posisi_kiri"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'kiri',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {(selectedImagePreviews.kiri ||
+                                                land.foto_posisi_kiri) && (
+                                                <img
+                                                    src={
+                                                        selectedImagePreviews.kiri ||
+                                                        getPositionImageUrl('kiri')
+                                                    }
+                                                    alt="Foto posisi kiri"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_kiri} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_kanan">
+                                                Foto Posisi Kanan
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_kanan"
+                                                name="foto_posisi_kanan"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'kanan',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {(selectedImagePreviews.kanan ||
+                                                land.foto_posisi_kanan) && (
+                                                <img
+                                                    src={
+                                                        selectedImagePreviews.kanan ||
+                                                        getPositionImageUrl('kanan')
+                                                    }
+                                                    alt="Foto posisi kanan"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_kanan} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_atas">
+                                                Foto Posisi Atas
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_atas"
+                                                name="foto_posisi_atas"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'atas',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {(selectedImagePreviews.atas ||
+                                                land.foto_posisi_atas) && (
+                                                <img
+                                                    src={
+                                                        selectedImagePreviews.atas ||
+                                                        getPositionImageUrl('atas')
+                                                    }
+                                                    alt="Foto posisi atas"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_atas} />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label htmlFor="foto_posisi_bawah">
+                                                Foto Posisi Bawah
+                                            </Label>
+                                            <Input
+                                                id="foto_posisi_bawah"
+                                                name="foto_posisi_bawah"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                onChange={(e) =>
+                                                    handleImagePreview(
+                                                        'bawah',
+                                                        e.target.files?.[0],
+                                                    )
+                                                }
+                                            />
+                                            {(selectedImagePreviews.bawah ||
+                                                land.foto_posisi_bawah) && (
+                                                <img
+                                                    src={
+                                                        selectedImagePreviews.bawah ||
+                                                        getPositionImageUrl('bawah')
+                                                    }
+                                                    alt="Foto posisi bawah"
+                                                    className="h-28 w-full rounded-md border object-cover"
+                                                />
+                                            )}
+                                            <InputError message={errors.foto_posisi_bawah} />
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        Upload file baru untuk mengganti foto sebelumnya. Maksimal 5MB per file.
+                                    </p>
                                 </div>
 
                                 {/* Dynamic Custom Fields */}

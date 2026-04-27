@@ -32,11 +32,76 @@ Route::get('/brankas-elektronik', function () {
     return Inertia::render('brankas-elektronik');
 })->name('brankas-elektronik');
 
+// Pencarian Bidang Tanah - Public access (no auth required to view)
+Route::get('/pencarian-bidang-tanah', function () {
+    $nomorSertifikat = request('nomor_sertifikat');
+    $namaPemilik = request('nama_pemilik');
+    $lokasi = request('lokasi');
+    
+    // Ambil semua lands dengan coordinates yang valid
+    $lands = Land::with('certificates')
+        ->whereNotNull('coordinates')
+        ->whereNotNull('coordinate')
+        ->get()
+        ->map(function ($land) {
+            // Force reload additional_data to ensure it's included
+            $additionalData = $land->additional_data;
+            
+            $mapped = [
+                'id' => $land->id,
+                'nomor_hak' => $land->nomor_hak,
+                'pemilik_pe' => $land->pemilik_pe,
+                'pemilik_ak' => $land->pemilik_ak,
+                'kelurahan' => $land->kelurahan,
+                'kecamatan' => $land->kecamatan,
+                'luas' => $land->luas,
+                'tipe_hak' => $land->tipe_hak,
+                'penggunaan' => $land->penggunaan,
+                'coordinates' => is_string($land->coordinates) ? json_decode($land->coordinates) : $land->coordinates,
+                'coordinate' => is_string($land->coordinate) ? json_decode($land->coordinate) : $land->coordinate,
+                'certificates' => $land->certificates,
+                'additional_data' => $additionalData,
+                'foto_posisi_kiri' => $land->foto_posisi_kiri,
+                'foto_posisi_kanan' => $land->foto_posisi_kanan,
+                'foto_posisi_atas' => $land->foto_posisi_atas,
+                'foto_posisi_bawah' => $land->foto_posisi_bawah,
+            ];
+            
+            return $mapped;
+        });
+    
+    // Get custom fields visible in detail
+    $customFields = \App\Models\CustomFieldDefinition::active()
+        ->visibleInDetail()
+        ->ordered()
+        ->get();
+    
+    return Inertia::render('pencarian-bidang-tanah', [
+        'lands' => $lands,
+        'customFields' => $customFields,
+        'filters' => [
+            'nomor_sertifikat' => $nomorSertifikat,
+            'nama_pemilik' => $namaPemilik,
+            'lokasi' => $lokasi,
+        ],
+    ]);
+})->name('pencarian.bidang-tanah');
+
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         $totalLands = Land::count();
         $totalCertificates = Certificate::count();
         $totalAdmins = null;
+        $districts = ['Pemenang', 'Bayan', 'Gangga', 'Kayangan', 'Tanjung'];
+        $districtCounts = Land::query()
+            ->whereNotNull('kecamatan')
+            ->pluck('kecamatan')
+            ->map(fn ($district) => strtolower(trim((string) $district)))
+            ->countBy();
+        $landCountsByDistrict = collect($districts)->map(fn ($district) => [
+            'district' => $district,
+            'total' => $districtCounts->get(strtolower($district), 0),
+        ])->values();
         
         /** @var User $user */
         $user = Auth::user();
@@ -48,58 +113,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'totalLands' => $totalLands,
             'totalCertificates' => $totalCertificates,
             'totalAdmins' => $totalAdmins,
+            'landCountsByDistrict' => $landCountsByDistrict,
         ]);
     })->name('dashboard');
-
-    // Pencarian Bidang Tanah - Requires authentication
-    Route::get('/pencarian-bidang-tanah', function () {
-        $nomorSertifikat = request('nomor_sertifikat');
-        $namaPemilik = request('nama_pemilik');
-        $lokasi = request('lokasi');
-        
-        // Ambil semua lands dengan coordinates yang valid
-        $lands = Land::with('certificates')
-            ->whereNotNull('coordinates')
-            ->whereNotNull('coordinate')
-            ->get()
-            ->map(function ($land) {
-                // Force reload additional_data to ensure it's included
-                $additionalData = $land->additional_data;
-                
-                $mapped = [
-                    'id' => $land->id,
-                    'nomor_hak' => $land->nomor_hak,
-                    'pemilik_pe' => $land->pemilik_pe,
-                    'pemilik_ak' => $land->pemilik_ak,
-                    'kelurahan' => $land->kelurahan,
-                    'kecamatan' => $land->kecamatan,
-                    'luas' => $land->luas,
-                    'tipe_hak' => $land->tipe_hak,
-                    'coordinates' => is_string($land->coordinates) ? json_decode($land->coordinates) : $land->coordinates,
-                    'coordinate' => is_string($land->coordinate) ? json_decode($land->coordinate) : $land->coordinate,
-                    'certificates' => $land->certificates,
-                    'additional_data' => $additionalData,
-                ];
-                
-                return $mapped;
-            });
-        
-        // Get custom fields visible in detail
-        $customFields = \App\Models\CustomFieldDefinition::active()
-            ->visibleInDetail()
-            ->ordered()
-            ->get();
-        
-        return Inertia::render('pencarian-bidang-tanah', [
-            'lands' => $lands,
-            'customFields' => $customFields,
-            'filters' => [
-                'nomor_sertifikat' => $nomorSertifikat,
-                'nama_pemilik' => $namaPemilik,
-                'lokasi' => $lokasi,
-            ],
-        ]);
-    })->name('pencarian.bidang-tanah');
 
     // Admin Management - Super Admin Only
     Route::middleware(['super_admin'])->group(function () {
@@ -129,6 +145,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Land Management - All verified users
     Route::resource('land', LandController::class);
+    Route::get('/land/{land}/position-images/{position}', [LandController::class, 'positionImage'])
+        ->whereIn('position', ['kiri', 'kanan', 'atas', 'bawah'])
+        ->name('land.position-image');
     
     // Land Certificates - Nested resource
     Route::get('/land/{land}/certificates', [LandCertificateController::class, 'index'])->name('land.certificates.index');
