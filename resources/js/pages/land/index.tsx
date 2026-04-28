@@ -157,6 +157,8 @@ export default function LandIndex() {
                                     <SelectItem value="gangga">Gangga</SelectItem>
                                     <SelectItem value="pemenang">Pemenang</SelectItem>
                                     <SelectItem value="tanjung">Tanjung</SelectItem>
+                                    <SelectItem value="bayan">Bayan</SelectItem>
+                                    <SelectItem value="kayangan">Kayangan</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Select
