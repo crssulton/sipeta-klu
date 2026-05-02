@@ -40,8 +40,8 @@ Route::get('/pencarian-bidang-tanah', function () {
     
     // Ambil semua lands dengan coordinates yang valid
     $lands = Land::with('certificates')
-        ->whereNotNull('coordinates')
-        ->whereNotNull('coordinate')
+        // ->whereNotNull('coordinates')
+        // ->whereNotNull('coordinate')
         ->get()
         ->map(function ($land) {
             // Force reload additional_data to ensure it's included
